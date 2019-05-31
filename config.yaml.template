@@ -21,6 +21,7 @@ memory_size: 256
 #
 
 environment_variables:
+    app_env: "prod"
     telegram_token: "XXXXXX"
     telegram_channel: "XXXXXX"
 
