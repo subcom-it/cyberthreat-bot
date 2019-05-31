@@ -1,5 +1,6 @@
 *~
 config.yaml
+cis-cyberthreat-telegram-bot-policy.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
