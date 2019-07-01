@@ -10,40 +10,51 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0',
 }
 
-bot = telegram.Bot(token=os.environ['telegram_token'])
+telegram_token = os.environ.get('telegram_token')
+telegram_channel = os.environ.get('telegram_channel')
+appenv = os.environ.get('app_env')
+bot = telegram.Bot(token=telegram_token) if telegram_token else None
+
+dynamodb_table = os.environ.get('dynamodb_table')
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(dynamodb_table) if dynamodb_table else None
 
 def send_message(message, bot=bot):
-    if os.environ['app_env'] != "prod": return print(message)
+    if not bot or not telegram_channel: return print(message)
     
-    bot.send_message(chat_id=os.environ['telegram_channel'], text=message)
+    bot.send_message(chat_id=telegram_channel, text=message)
 
 def send_description_if_new(description):
-    if os.environ['app_env'] != "prod": return print(description)
+    if not dynamodb_table: return send_message(description)
     
     try:
-        dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table('cis_threat_dedup')
         response = table.get_item(
             Key={
                 'description': description,
             }
         )
+        print("Query result: " + repr(response))
 
     except Exception as e:
         send_message("CIS threat ERROR, couldn't query DynamoDB")
         raise e
         
-    if response.get('Item', None) and response['Item']['description'] == description:
+    if not response.get('Item'):
         send_message(description)
+        table.update_item(
+            Key={
+                'description': description,
+            }
+        )
+
+    else:
+        print('Duplicate CIS threat')
         
-    if response.get('Item', None):
-        table.delete_item(Key=response['Item']['description'])
+    #if appenv != 'prod': return
+    
+    #if response.get('Item'):
+    #    table.delete_item(Key=response['Item'])
         
-    table.update_item(
-        Key={
-            'description': description,
-        }
-    )
  
 
 def handler(event, context):
