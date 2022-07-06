@@ -10,7 +10,7 @@ docutils==0.14
 future==0.17.1
 idna==2.8
 jmespath==0.9.4
-lxml==4.3.3
+lxml==4.9.1
 pycparser==2.19
 python-dateutil==2.8.0
 python-lambda==3.2.6
